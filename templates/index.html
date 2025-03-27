@@ -29,6 +29,22 @@
             color: #666;
             margin-bottom: 20px;
         }
+        .nav-links {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #3a86ff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #e6f0ff;
+        }
         .upload-section {
             background-color: white;
             border-radius: 10px;
@@ -52,6 +68,16 @@
         }
         .upload-btn:hover {
             background-color: #2563eb;
+        }
+        .save-option {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .save-option label {
+            margin-left: 8px;
+            cursor: pointer;
         }
         .result-section {
             display: none;
@@ -106,6 +132,12 @@
             margin-top: 15px;
             display: none;
         }
+        .saved-message {
+            color: #2ecc71;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -115,10 +147,22 @@
             <p class="description">上传衣物照片，系统将自动识别衣物类型</p>
         </header>
         
+        <div class="nav-links">
+            <a href="/">首页</a>
+            <a href="/wardrobe">我的衣橱</a>
+            <a href="/view-log" target="_blank">查看识别日志</a>
+        </div>
+        
         <div class="upload-section">
             <input type="file" id="file-input" class="file-input" accept="image/*">
             <label for="file-input" class="upload-btn">选择图片文件</label>
             <p id="file-name"></p>
+            
+            <div class="save-option">
+                <input type="checkbox" id="save-to-wardrobe" checked>
+                <label for="save-to-wardrobe">保存到我的衣橱</label>
+            </div>
+            
             <div class="error-message" id="error-message"></div>
         </div>
         
@@ -131,6 +175,7 @@
             <img id="preview-image" class="preview-image" src="" alt="上传的图片">
             <div class="result-title">识别结果</div>
             <div class="result-type" id="clothing-type"></div>
+            <div id="saved-message" class="saved-message">已保存到我的衣橱</div>
             <div class="result-details">
                 <p>详细预测结果：</p>
                 <div id="predictions-list"></div>
@@ -148,6 +193,8 @@
             const clothingType = document.getElementById('clothing-type');
             const predictionsList = document.getElementById('predictions-list');
             const errorMessage = document.getElementById('error-message');
+            const saveToWardrobe = document.getElementById('save-to-wardrobe');
+            const savedMessage = document.getElementById('saved-message');
             
             fileInput.addEventListener('change', function() {
                 if (fileInput.files.length > 0) {
@@ -158,6 +205,7 @@
                     loading.style.display = 'block';
                     resultSection.style.display = 'none';
                     errorMessage.style.display = 'none';
+                    savedMessage.style.display = 'none';
                     
                     // 预览图片
                     const reader = new FileReader();
@@ -174,6 +222,7 @@
             function uploadImage(file) {
                 const formData = new FormData();
                 formData.append('file', file);
+                formData.append('save_to_wardrobe', saveToWardrobe.checked);
                 
                 fetch('/upload', {
                     method: 'POST',
@@ -191,6 +240,13 @@
                     
                     // 显示识别结果
                     clothingType.textContent = data.clothing_type;
+                    
+                    // 显示是否保存到衣橱
+                    if (data.saved_to_wardrobe) {
+                        savedMessage.style.display = 'block';
+                    } else {
+                        savedMessage.style.display = 'none';
+                    }
                     
                     // 显示详细预测结果
                     predictionsList.innerHTML = '';

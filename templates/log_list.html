@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>识别日志列表 - 衣物识别系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #3a86ff;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .nav-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #3a86ff;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #e6f0ff;
+        }
+        .log-files {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .log-file-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .log-file-item:last-child {
+            border-bottom: none;
+        }
+        .log-file-link {
+            color: #3a86ff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .log-file-link:hover {
+            text-decoration: underline;
+        }
+        .log-file-date {
+            color: #666;
+            font-size: 14px;
+        }
+        .no-logs {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>识别日志列表</h1>
+            <p class="description">查看衣物识别系统的运行日志</p>
+        </header>
+        
+        <div class="nav-links">
+            <a href="/">返回首页</a>
+            <a href="/wardrobe">我的衣橱</a>
+        </div>
+        
+        <div class="log-files">
+            {% if log_files %}
+                {% for log in log_files %}
+                <div class="log-file-item">
+                    <a href="/view-log/{{ log.filename }}" target="_blank" class="log-file-link">{{ log.filename }}</a>
+                    <span class="log-file-date">{{ log.timestamp|datetime }}</span>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-logs">
+                    <p>暂无识别日志</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html> 
