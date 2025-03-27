@@ -1,0 +1,6 @@
+setuptools>=65.5.0
+Flask==2.0.1
+tensorflow==2.16.1
+numpy==1.22.3
+Pillow==9.0.1
+werkzeug==2.0.2 
