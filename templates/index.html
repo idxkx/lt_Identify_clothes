@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>衣物识别系统</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f9fc;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #3a86ff;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .upload-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .file-input {
+            display: none;
+        }
+        .upload-btn {
+            display: inline-block;
+            background-color: #3a86ff;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .upload-btn:hover {
+            background-color: #2563eb;
+        }
+        .result-section {
+            display: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3a86ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result-title {
+            font-size: 24px;
+            color: #3a86ff;
+            margin-bottom: 10px;
+        }
+        .result-type {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #333;
+        }
+        .result-details {
+            margin-top: 20px;
+        }
+        .pred-item {
+            margin-bottom: 5px;
+        }
+        .error-message {
+            color: #e63946;
+            margin-top: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>衣物识别系统</h1>
+            <p class="description">上传衣物照片，系统将自动识别衣物类型</p>
+        </header>
+        
+        <div class="upload-section">
+            <input type="file" id="file-input" class="file-input" accept="image/*">
+            <label for="file-input" class="upload-btn">选择图片文件</label>
+            <p id="file-name"></p>
+            <div class="error-message" id="error-message"></div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>正在识别中，请稍候...</p>
+        </div>
+        
+        <div class="result-section" id="result-section">
+            <img id="preview-image" class="preview-image" src="" alt="上传的图片">
+            <div class="result-title">识别结果</div>
+            <div class="result-type" id="clothing-type"></div>
+            <div class="result-details">
+                <p>详细预测结果：</p>
+                <div id="predictions-list"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('file-input');
+            const fileName = document.getElementById('file-name');
+            const loading = document.getElementById('loading');
+            const resultSection = document.getElementById('result-section');
+            const previewImage = document.getElementById('preview-image');
+            const clothingType = document.getElementById('clothing-type');
+            const predictionsList = document.getElementById('predictions-list');
+            const errorMessage = document.getElementById('error-message');
+            
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    fileName.textContent = `已选择: ${file.name}`;
+                    
+                    // 显示加载状态
+                    loading.style.display = 'block';
+                    resultSection.style.display = 'none';
+                    errorMessage.style.display = 'none';
+                    
+                    // 预览图片
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                    
+                    // 上传图片并获取识别结果
+                    uploadImage(file);
+                }
+            });
+            
+            function uploadImage(file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    
+                    if (data.error) {
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
+                        return;
+                    }
+                    
+                    // 显示识别结果
+                    clothingType.textContent = data.clothing_type;
+                    
+                    // 显示详细预测结果
+                    predictionsList.innerHTML = '';
+                    data.predictions.forEach(pred => {
+                        const predItem = document.createElement('div');
+                        predItem.className = 'pred-item';
+                        predItem.textContent = `${pred.label}: ${(pred.score * 100).toFixed(2)}%`;
+                        predictionsList.appendChild(predItem);
+                    });
+                    
+                    // 显示结果区域
+                    resultSection.style.display = 'block';
+                })
+                .catch(error => {
+                    loading.style.display = 'none';
+                    errorMessage.textContent = '上传或识别过程中发生错误，请重试。';
+                    errorMessage.style.display = 'block';
+                    console.error('Error:', error);
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
